@@ -15,7 +15,7 @@ public class Asynctascker extends AsyncTask<Bitmap,Void,Bitmap> {
     protected  Bitmap doInBackground(Bitmap...bmp) {
 
 
-        return Bitmap.createBitmap(bmp[0]);
+        return Bitmap.createBitmap(bmp[0].getWidth(),bmp[0].getHeight(), Bitmap.Config.ARGB_8888);
     }
 
 //
