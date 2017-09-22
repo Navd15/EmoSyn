@@ -191,7 +191,7 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-    //Helper method to clear cache dir after application closes
+    //Helper method to clear cache dir
 
     private static void clearCacheDir() {
 
