@@ -30,7 +30,7 @@ import java.util.concurrent.ExecutionException;
 import in.asynchronous.Asynctascker;
 
 /**
- * Created by nav_161 on 7/23/2017.
+ * Created by navdeep on 7/23/2017.
  */
 
 
@@ -43,7 +43,7 @@ public class turner {
     private static double Threshold_EyesOpen = 0.51;
     private static double Threshold_smiling = 0.56;
     private static double scale_fac = 0.9f;
-         static Canvas canvas;
+         public static Canvas canvas;
 
 
     /**
@@ -247,7 +247,7 @@ public class turner {
      */
     private static Bitmap adder(Bitmap bg_image, Bitmap emoji_bg, Face face_slected) {
 
-        // Cloning the bitmap sent  by the  user
+        // Cloning the bitmap selected by user
         Bitmap overlyed = null;
         try {
             overlyed = new Asynctascker().execute(bg_image).get();

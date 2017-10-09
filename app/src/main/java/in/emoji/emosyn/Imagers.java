@@ -29,7 +29,7 @@ import java.util.Locale;
 import static android.graphics.Bitmap.CompressFormat.JPEG;
 
 /**
- * Created by nav_161 on 7/21/2017.
+ * Created by navdeep on 7/21/2017.
  */
 
 public class Imagers {
