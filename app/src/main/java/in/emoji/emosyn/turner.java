@@ -1,18 +1,30 @@
 package in.emoji.emosyn;
 
 import android.content.Context;
+import android.content.Intent;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 
+import android.os.AsyncTask;
 import android.util.Log;
 import android.util.SparseArray;
+import android.widget.Switch;
 import android.widget.Toast;
 
 import com.google.android.gms.vision.Frame;
+import com.google.android.gms.vision.barcode.Barcode;
 import com.google.android.gms.vision.face.Face;
 import com.google.android.gms.vision.face.FaceDetector;
+import com.google.android.gms.vision.face.Landmark;
 
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.ListIterator;
+import java.util.Locale;
 import java.util.concurrent.ExecutionException;
 
 import in.asynchronous.Asynctascker;
@@ -27,12 +39,11 @@ import in.asynchronous.Asynctascker;
  *
  * */
 public class turner {
-    private static final String TAG = "turner";
+    private static final String TAG = "in.emoji.emosyn.turner";
     private static double Threshold_EyesOpen = 0.51;
     private static double Threshold_smiling = 0.56;
     private static double scale_fac = 0.9f;
-    private static int drawable_id;
-    public static Canvas canu;
+         static Canvas canvas;
 
 
     /**
@@ -40,7 +51,7 @@ public class turner {
      * @param bmp
      */
 
-    static Bitmap finder(Context context, Bitmap bmp) {
+    static Bitmap finder(Context context, Bitmap bmp){
 
         FaceDetector fd = new FaceDetector.Builder(context).setTrackingEnabled(false)
                 .setClassificationType(FaceDetector.ALL_CLASSIFICATIONS)
@@ -71,11 +82,14 @@ public class turner {
 
                 smiling = Sp.get(i).getIsSmilingProbability() > Threshold_smiling;
 
-                //selectEmoji() method returns the drawable id for the required emoji
+                //selectEmoji method returns the drawable id for the required emoji
 
-                selected_emo = BitmapFactory.decodeResource(context.getResources(),drawable_id);
+                selected_emo = BitmapFactory.decodeResource(context.getResources(), selectEmoji(whicEmoji(smiling, left_eye_open, right_eye_open)));
 
-                final_ = adder(final_, selected_emo, Sp.get(i));
+
+                    final_ = adder(final_, selected_emo, Sp.get(i));
+
+
 
 
             }
@@ -152,7 +166,8 @@ public class turner {
             }
 
 
-        } else if (l && r) {
+        } else
+            if (l && r) {
             return Emoji.FROWNING;
 
         }
@@ -176,50 +191,47 @@ public class turner {
 
     /**
      * Helper method returns the 'id' of the drawable according to the emoji selected from 'whichEmoji' method
-     *
      * @param e
-     *
+     * @return drawable id
      */
-    private static void selectEmoji(Emoji e) {
+    private static int selectEmoji(Emoji e) {
         switch (e) {
 
             case SMILING:
-                drawable_id = R.drawable.smiling;
 
-                break;
-
+                return R.drawable.smiling;
 
             case SMILING_RIGHT_EYE_OPEN:
-                drawable_id = R.drawable.rightwink;
-                break;
+
+                return R.drawable.rightwink;
 
             case SMILING_LEFT_EYE_OPEN:
 
-                drawable_id= R.drawable.leftwink;
-break;
+                return R.drawable.leftwink;
+
             case SMILING_BOTH_EYES_CLOSED:
 
-                drawable_id=R.drawable.closed_smile;
-break;
+                return R.drawable.closed_smile;
+
             case FROWNING:
 
-                drawable_id= R.drawable.frown;
-break;
+                return R.drawable.frown;
+
             case FROWNING_RIGHT_EYE_OPEN:
 
-                drawable_id= R.drawable.rightwinkfrown;
-break;
+                return R.drawable.rightwinkfrown;
+
             case FROWNING_LEFT_EYE_OPEN:
 
-                drawable_id= R.drawable.leftwinkfrown;
-break;
+                return R.drawable.leftwinkfrown;
+
             case FROWNING_BOTH_EYES_CLOSED:
 
-                drawable_id= R.drawable.closed_frown;
-break;
+                return R.drawable.closed_frown;
+
             default:
 
-                // --------void---------- .
+                return 0;
         }
 
 
@@ -234,34 +246,23 @@ break;
      * @return final bitmap
      */
     private static Bitmap adder(Bitmap bg_image, Bitmap emoji_bg, Face face_slected) {
-        Asynctascker asynctascker =new Asynctascker();
-        Bitmap overlyed= null;
+
+        // Cloning the bitmap sent  by the  user
+        Bitmap overlyed = null;
         try {
-            overlyed = asynctascker.execute(bg_image).get();
+            overlyed = new Asynctascker().execute(bg_image).get();
         } catch (InterruptedException e) {
             e.printStackTrace();
         } catch (ExecutionException e) {
             e.printStackTrace();
         }
 
-
-//        try {
-//            Bitmap overlyed= asynctascker.execute().get();
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        } catch (ExecutionException e) {
-//            e.printStackTrace();
-//        }
-//         Cloning the bitmap sent  by the  user
-//        Bitmap overlyed = Bitmap.createBitmap(bg_image.getWidth(), bg_image.getHeight(), bg_image.getConfig());
-
         //Scale the size of emoji to be drawn on
         int emo_height = (int) (face_slected.getHeight() * scale_fac);
         int emo_width = (int) (face_slected.getWidth() * scale_fac);
 
-//recreate a emoji with new dimens
-
-emoji_bg = Bitmap.createScaledBitmap( emoji_bg, emo_width, emo_height, false);
+       //create a emoji with new dimens
+        emoji_bg = Bitmap.createScaledBitmap(emoji_bg, emo_width, emo_height, false);
 
         // position to draw the emoji
         float emojiPositionX =
@@ -271,21 +272,19 @@ emoji_bg = Bitmap.createScaledBitmap( emoji_bg, emo_width, emo_height, false);
                 (face_slected.getPosition().y + face_slected.getHeight() / 2) - emoji_bg.getHeight() / 3;
 
         //new Canvas object to draw face on
-      Canvas canu = new Canvas(overlyed);
+                 canvas = new Canvas(overlyed);
 
         //we have to draw it again as Bitmap is imutable
-        canu.drawBitmap(bg_image, 0, 0, null);
+        canvas.drawBitmap(bg_image, 0, 0, null);
 
         // selcted emoji bg drawn on given positions
-        canu.drawBitmap(emoji_bg, emojiPositionX, emojiPositionY, null);
+        canvas.drawBitmap(emoji_bg, emojiPositionX, emojiPositionY, null);
 
 
         // returning the overlayed image
         return overlyed;
 
     }
-
-
 
 
 }
