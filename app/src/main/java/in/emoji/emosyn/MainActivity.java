@@ -66,6 +66,9 @@ public void change(View v){
 if(rb.isPressed())
     isolated_mode=true;
 
+    else
+        isolated_mode=false;
+
 }
 
 
