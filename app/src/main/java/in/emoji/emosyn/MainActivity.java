@@ -18,6 +18,7 @@ import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RadioButton;
 import android.widget.Spinner;
 import android.widget.Toast;
 import java.io.File;
@@ -36,12 +37,15 @@ public class MainActivity extends AppCompatActivity {
     private static final String File_Provider_Authority = "in.emoji.fileprovider";
     private static String tempPath = " ";
     private Bitmap bmp;
+    public static boolean isolated_mode=false;
+    RadioButton rb;
     private LinearLayout bottomBanner;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        rb= (RadioButton) findViewById(R.id.rb);
         delete=(FloatingActionButton) findViewById(R.id.delete);
 
         delete.setVisibility(View.GONE);
@@ -58,7 +62,11 @@ public class MainActivity extends AppCompatActivity {
 
 
     }
+public void change(View v){
+if(rb.isPressed())
+    isolated_mode=true;
 
+}
 
 
     public void click(View v) {

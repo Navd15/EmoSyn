@@ -3,16 +3,20 @@ package in.asynchronous;
 import android.graphics.Bitmap;
 import android.os.AsyncTask;
 
+import in.emoji.emosyn.turner;
+
 
 /**
  * Created by navdeep on 22/9/17.
  */
 
-public class Asynctascker extends AsyncTask<Bitmap, Void, Bitmap> {
+public class Asynctascker extends AsyncTask<Bitmap, Void,Void> {
     @Override
-    protected Bitmap doInBackground(Bitmap... bmp) {
-        return Bitmap.createBitmap(bmp[0].getWidth(), bmp[0].getHeight(), Bitmap.Config.ARGB_8888);
+    protected Void doInBackground(Bitmap... bmp) {
 
+        turner.canvas.drawBitmap(bmp[0],0,0,null);
+        turner.canvas.drawBitmap(bmp[1],turner.emojiPositionX,turner.emojipositionY,null);
+return null;
     }
 
 //

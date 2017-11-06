@@ -44,6 +44,7 @@ public class turner {
     private static double Threshold_smiling = 0.56;
     private static double scale_fac = 0.9f;
          public static Canvas canvas;
+    public static   float emojiPositionX,emojipositionY;
 
 
     /**
@@ -249,13 +250,9 @@ public class turner {
 
         // Cloning the bitmap selected by user
         Bitmap overlyed = null;
-        try {
-            overlyed = new Asynctascker().execute(bg_image).get();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (ExecutionException e) {
-            e.printStackTrace();
-        }
+
+            overlyed =Bitmap.createBitmap(bg_image.getWidth(),bg_image.getHeight(), Bitmap.Config.ARGB_4444);
+
 
         //Scale the size of emoji to be drawn on
         int emo_height = (int) (face_slected.getHeight() * scale_fac);
@@ -265,7 +262,7 @@ public class turner {
         emoji_bg = Bitmap.createScaledBitmap(emoji_bg, emo_width, emo_height, false);
 
         // position to draw the emoji
-        float emojiPositionX =
+       float emojiPositionX =
                 (face_slected.getPosition().x + face_slected.getWidth() / 2) - emoji_bg.getWidth() / 2;
 
         float emojiPositionY =
@@ -274,11 +271,12 @@ public class turner {
         //new Canvas object to draw face on
                  canvas = new Canvas(overlyed);
 
-        //we have to draw it again as Bitmap is imutable
-        canvas.drawBitmap(bg_image, 0, 0, null);
+        //draw it again
+        new Asynctascker().execute(bg_image,emoji_bg);
+//        canvas.drawBitmap(bg_image, 0, 0, null);
 
-        // selcted emoji bg drawn on given positions
-        canvas.drawBitmap(emoji_bg, emojiPositionX, emojiPositionY, null);
+        // selcted emoji_bg drawn on given positions
+//        canvas.drawBitmap(emoji_bg, emojiPositionX, emojiPositionY, null);
 
 
         // returning the overlayed image
