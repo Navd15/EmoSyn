@@ -254,7 +254,7 @@ public class turner {
             overlyed =Bitmap.createBitmap(bg_image.getWidth(),bg_image.getHeight(), Bitmap.Config.ARGB_4444);
 
 
-        //Scale the size of emoji to be drawn on
+        //Scale the size of emoji to be drawn
         int emo_height = (int) (face_slected.getHeight() * scale_fac);
         int emo_width = (int) (face_slected.getWidth() * scale_fac);
 
