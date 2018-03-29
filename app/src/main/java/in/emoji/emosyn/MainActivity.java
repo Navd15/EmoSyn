@@ -5,6 +5,8 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.AsyncTask;
+import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
@@ -12,23 +14,22 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
-import android.widget.Spinner;
 import android.widget.Toast;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 
 
 public class MainActivity extends AppCompatActivity {
-    private FloatingActionButton click,delete;
-    private static Boolean isAlreadySaved=false;
-    private ImageButton save,share;
+    private FloatingActionButton click, delete;
+    private static Boolean isAlreadySaved = false;
+    private ImageButton save, share;
     private final int share_code = 1;
     private ImageView img;
     private static final int req_co = 124;
@@ -37,16 +38,15 @@ public class MainActivity extends AppCompatActivity {
     private static final String File_Provider_Authority = "in.emoji.fileprovider";
     private static String tempPath = " ";
     private Bitmap bmp;
-    public static boolean isolated_mode=false;
-    RadioButton rb;
     private LinearLayout bottomBanner;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        rb= (RadioButton) findViewById(R.id.rb);
-        delete=(FloatingActionButton) findViewById(R.id.delete);
+
+        delete = (FloatingActionButton) findViewById(R.id.delete);
 
         delete.setVisibility(View.GONE);
 
@@ -56,20 +56,13 @@ public class MainActivity extends AppCompatActivity {
 
         share = (ImageButton) findViewById(R.id.share);
 
-        bottomBanner=(LinearLayout) findViewById(R.id.bottomBanner) ;
+        bottomBanner = (LinearLayout) findViewById(R.id.bottomBanner);
 
         img = (ImageView) findViewById(R.id.img);
 
 
     }
-public void change(View v){
-if(rb.isPressed())
-    isolated_mode=true;
 
-    else
-        isolated_mode=false;
-
-}
 
 
     public void click(View v) {
@@ -102,10 +95,10 @@ if(rb.isPressed())
         Intent launch_cam = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         if (launch_cam.resolveActivity(getPackageManager()) != null) {
             //create a temp file
-             File tempimg ;
+            File tempimg;
 
-            tempimg=Imagers.createTemp(getApplicationContext());
-           //
+            tempimg = Imagers.createTemp(getApplicationContext());
+            //
             if (tempimg != null) {
                 tempPath = tempimg.getAbsolutePath();
                 Uri temp = FileProvider.getUriForFile(this, File_Provider_Authority, tempimg);
@@ -144,44 +137,53 @@ if(rb.isPressed())
 // Triggers after user selects the image from camera
 
     private void setupData() {
-        delete.setVisibility(View.VISIBLE);
-        click.setVisibility(View.INVISIBLE);
-        img.setVisibility(View.VISIBLE);
-        bottomBanner.setVisibility(View.VISIBLE);
-
 
         try {
             //
-            bmp=turner.finder(this, Imagers.iCompress(getApplicationContext(), tempPath));
+            turner turn=new turner(this,Imagers.iCompress(getApplicationContext(), tempPath));
 
+            if(turn.finder()!=null) {
+                bmp = turn.finder();
+                delete.setVisibility(View.VISIBLE);
+                click.setVisibility(View.INVISIBLE);
+                img.setVisibility(View.VISIBLE);
+                bottomBanner.setVisibility(View.VISIBLE);
+                img.setImageBitmap(bmp);
+
+            }
+            else{
+               //do nothing
+
+            }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
 
-        img.setImageBitmap(bmp);
+
 
 
     }
 
-    public void deleteIt(View v){
+    public void deleteIt(View v) {
         img.setImageBitmap(null);
         img.setVisibility(View.GONE);
         click.setVisibility(View.VISIBLE);
         bottomBanner.setVisibility(View.GONE);
         delete.setVisibility(View.GONE);
-        Imagers.deleteFile(this,tempPath);
-    };
+        Imagers.deleteFile(this, tempPath);
+    }
+
 
     public void saveIt(View view) {
-        Imagers.saveImage(this,bmp);
+        Imagers.saveImage(this, bmp);
 
         Imagers.deleteFile(this, tempPath);
 
     }
 
     public void share(View v) {
-        File n= new File(Imagers.saveImage(this,bmp));
-        Uri urs = FileProvider.getUriForFile(this, File_Provider_Authority,n);
+        File n = new File(Imagers.saveImage(this, bmp));
+        Uri urs = FileProvider.getUriForFile(this, File_Provider_Authority, n);
         Intent sh = new Intent(Intent.ACTION_SEND);
         sh.setType("image/*");
         sh.putExtra(Intent.EXTRA_STREAM, urs);
@@ -202,7 +204,6 @@ if(rb.isPressed())
     }
 
 
-
     //Helper method to clear cache dir
 
     private static void clearCacheDir() {
@@ -221,6 +222,6 @@ if(rb.isPressed())
 
 
 
-    }
+}
 
 
