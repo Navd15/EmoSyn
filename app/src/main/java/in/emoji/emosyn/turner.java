@@ -1,34 +1,17 @@
 package in.emoji.emosyn;
 
 import android.content.Context;
-import android.content.Intent;
-import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
-
 import android.os.AsyncTask;
 import android.util.Log;
 import android.util.SparseArray;
-import android.widget.Switch;
 import android.widget.Toast;
 
 import com.google.android.gms.vision.Frame;
-import com.google.android.gms.vision.barcode.Barcode;
 import com.google.android.gms.vision.face.Face;
 import com.google.android.gms.vision.face.FaceDetector;
-import com.google.android.gms.vision.face.Landmark;
-
-import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.ListIterator;
-import java.util.Locale;
-import java.util.concurrent.ExecutionException;
-
-import in.asynchronous.Asynctascker;
-
 /**
  * Created by navdeep on 7/23/2017.
  */
@@ -39,32 +22,36 @@ import in.asynchronous.Asynctascker;
  *
  * */
 public class turner {
+    public Asynctascker asynctascker = new Asynctascker();
     private static final String TAG = "in.emoji.emosyn.turner";
     private static double Threshold_EyesOpen = 0.51;
     private static double Threshold_smiling = 0.56;
     private static double scale_fac = 0.9f;
-         public static Canvas canvas;
-    public static   float emojiPositionX,emojipositionY;
+    public static Canvas canvas;
+    public static float emojiPositionX, emojiPositionY;
+    Context context;
+    Bitmap original;
 
 
-    /**
-     * @param context
-     * @param bmp
-     */
+    public turner(Context context, Bitmap bmp) {
+        this.context = context;
+        original = bmp;
+    }
 
-    static Bitmap finder(Context context, Bitmap bmp){
+
+    public Bitmap finder() {
 
         FaceDetector fd = new FaceDetector.Builder(context).setTrackingEnabled(false)
-                .setClassificationType(FaceDetector.ALL_CLASSIFICATIONS)
+                .setClassificationType(FaceDetector.ALL_CLASSIFICATIONS).setLandmarkType(FaceDetector.ALL_LANDMARKS)
                 .build();
 
-        Frame fm = new Frame.Builder().setBitmap(bmp).build();
+        Frame fm = new Frame.Builder().setBitmap(original).build();
 
 
         SparseArray<Face> Sp = fd.detect(fm);
 
         int faceses = Sp.size();
-        Bitmap final_ = bmp;
+        Bitmap final_ = original;
 
         if (faceses > 0) {
 
@@ -80,29 +67,30 @@ public class turner {
                 right_eye_open = Sp.valueAt(i).getIsRightEyeOpenProbability() > Threshold_EyesOpen;
 
                 left_eye_open = Sp.valueAt(i).getIsLeftEyeOpenProbability() > Threshold_EyesOpen;
-
-                smiling = Sp.get(i).getIsSmilingProbability() > Threshold_smiling;
+                smiling = Sp.valueAt(i).getIsSmilingProbability() > Threshold_smiling;
 
                 //selectEmoji method returns the drawable id for the required emoji
 
                 selected_emo = BitmapFactory.decodeResource(context.getResources(), selectEmoji(whicEmoji(smiling, left_eye_open, right_eye_open)));
 
 
-                    final_ = adder(final_, selected_emo, Sp.get(i));
-
-
+                final_ = adder(final_, selected_emo, Sp.valueAt(i));
 
 
             }
+            fd.release();
+            fd=null;
+            fm=null;
+            original.recycle();
+            return final_;
+
 
 
         } else {
-            Toast.makeText(context, "No faces detected in the above image", Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, "No faces detected in the image", Toast.LENGTH_SHORT).show();
+            return  null;
         }
 
-        fd.release();
-
-        return final_;
 
     }
 
@@ -152,11 +140,11 @@ public class turner {
 
             }
             if (!l && r) {
-                return Emoji.SMILING_RIGHT_EYE_OPEN;
+                return Emoji.SMILING_LEFT_EYE_OPEN;
 
             }
             if (l && !r) {
-                return Emoji.SMILING_LEFT_EYE_OPEN;
+                return Emoji.SMILING_RIGHT_EYE_OPEN;
             }
 
 
@@ -167,19 +155,18 @@ public class turner {
             }
 
 
-        } else
-            if (l && r) {
+        } else if (l && r) {
             return Emoji.FROWNING;
 
         }
         if (!l && r) {
-            return Emoji.FROWNING_RIGHT_EYE_OPEN;
+            return Emoji.FROWNING_LEFT_EYE_OPEN;
 
         }
 
         if (l && !r) {
 
-            return Emoji.FROWNING_LEFT_EYE_OPEN;
+            return Emoji.FROWNING_RIGHT_EYE_OPEN;
         }
         if (!l && !r) {
             return Emoji.FROWNING_BOTH_EYES_CLOSED;
@@ -192,6 +179,7 @@ public class turner {
 
     /**
      * Helper method returns the 'id' of the drawable according to the emoji selected from 'whichEmoji' method
+     *
      * @param e
      * @return drawable id
      */
@@ -246,33 +234,33 @@ public class turner {
      * @param face_slected
      * @return final bitmap
      */
-    private static Bitmap adder(Bitmap bg_image, Bitmap emoji_bg, Face face_slected) {
+    private Bitmap adder(Bitmap bg_image, Bitmap emoji_bg, Face face_slected) {
 
         // Cloning the bitmap selected by user
         Bitmap overlyed = null;
 
-            overlyed =Bitmap.createBitmap(bg_image.getWidth(),bg_image.getHeight(), Bitmap.Config.ARGB_4444);
+        overlyed = Bitmap.createBitmap(bg_image.getWidth(), bg_image.getHeight(), Bitmap.Config.ARGB_4444);
 
 
         //Scale the size of emoji to be drawn on
         int emo_height = (int) (face_slected.getHeight() * scale_fac);
         int emo_width = (int) (face_slected.getWidth() * scale_fac);
 
-       //create a emoji with new dimens
+        //create a emoji with new dimens
         emoji_bg = Bitmap.createScaledBitmap(emoji_bg, emo_width, emo_height, false);
 
         // position to draw the emoji
-       float emojiPositionX =
+        emojiPositionX =
                 (face_slected.getPosition().x + face_slected.getWidth() / 2) - emoji_bg.getWidth() / 2;
 
-        float emojiPositionY =
+        emojiPositionY =
                 (face_slected.getPosition().y + face_slected.getHeight() / 2) - emoji_bg.getHeight() / 3;
 
         //new Canvas object to draw face on
-                 canvas = new Canvas(overlyed);
+        canvas = new Canvas(overlyed);
 
         //draw it again
-        new Asynctascker().execute(bg_image,emoji_bg);
+        asynctascker.execute(bg_image, emoji_bg);
 //        canvas.drawBitmap(bg_image, 0, 0, null);
 
         // selcted emoji_bg drawn on given positions
@@ -282,6 +270,24 @@ public class turner {
         // returning the overlayed image
         return overlyed;
 
+    }
+
+    class Asynctascker extends AsyncTask<Bitmap, Void, Void> {
+        @Override
+        protected Void doInBackground(Bitmap... bmp) {
+
+            canvas.drawBitmap(bmp[0], 0, 0, null);
+            canvas.drawBitmap(bmp[1], turner.emojiPositionX, turner.emojiPositionY, null);
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            //nothing yet
+
+
+        }
     }
 
 
